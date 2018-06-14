@@ -1,27 +1,48 @@
 fakeData()
 
-let model = {
+function Model(options) {
+  this.data = options.data
+  this.resource = options.resoruce
+}
+Model.prototype.fetch = function (id) {
+  return axios.get(`/${resource}s/${id}`).then((response) => {
+    this.data = response.data
+    return response
+  })
+}
+Model.prototype.update = function (data) {
+  let id = this.data.id
+  return axios.put(`/${resource}s/${id}`, data).then((response) => {
+    this.data = response.data
+    return response
+  })
+}
+
+function View({el, template}) {
+  this.el = el
+  this.template = template
+}
+View.prototype.render = function (data) {
+  let html = this.template
+  for(let key in data){
+    html = html.replace(`__${key}__`, data[key])
+  }
+  $(this.el).html(html)
+}
+
+/*上面是mvc类，下面是mvc对象*/ 
+
+let model = new Model({
   data: {
     name: '',
     id: '',
     number: 0
   },
-  fetch(id) {
-    return axios.get(`/books/${id}`).then((response) => {
-      this.data = response.data
-      return response
-    })
-  },
-  update(data) {
-    let id = this.data.id
-    return axios.put(`/books/${id}`, data).then((response) => {
-      this.data = response.data
-      return response
-    })
-  }
-}
+  resource: 'book'
+})
 
-let view = {
+
+let view = new View({
   el: '#app',
   template: `
     <div>
@@ -33,13 +54,10 @@ let view = {
       <button id="subtract">减1</button>
       <button id="reset">归零</button>
     </div>
-  `,
-  render(data) {
-    let html = this.template.replace('__name__', data.name)
-      .replace('__number__', data.number)
-    $(this.el).html(html)
-  }
-}
+  `
+})
+ 
+
 
 let controller = {
   init(options) {
@@ -82,7 +100,7 @@ let controller = {
     $(this.view.el).on('click', '#reset', this.reset.bind(this))
   }
 }
-controller.init({model: model, view: view})
+controller.init({ model: model, view: view })
 
 
 
