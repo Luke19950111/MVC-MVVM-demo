@@ -18,19 +18,9 @@ Model.prototype.update = function (data) {
   })
 }
 
-function View({el, template}) {
-  this.el = el
-  this.template = template
-}
-View.prototype.render = function (data) {
-  let html = this.template
-  for(let key in data){
-    html = html.replace(`__${key}__`, data[key])
-  }
-  $(this.el).html(html)
-}
 
-/*上面是mvc类，下面是mvc对象*/ 
+
+/*上面是mvc类，下面是mvc对象*/
 
 let model = new Model({
   data: {
@@ -42,65 +32,62 @@ let model = new Model({
 })
 
 
-let view = new View({
+let view = new Vue({
   el: '#app',
+  data: {
+    book: {
+      name: '未命名',
+      id: '',
+      number: 0
+    },
+    n: 1
+  },
   template: `
     <div>
-      书名：《__name__》
-      数量：<span id='number'>__number__</span>
+      书名：《{{book.name}}》
+      数量：<span id='number'>{{book.number}}</span>
     </div>
     <div>
-      <button id='addOne'>加1</button>
-      <button id="subtract">减1</button>
-      <button id="reset">归零</button>
+      <input v-model="n"/> //双向绑定
+      N的值是{{n}}
     </div>
-  `
+    <div>
+      <button v-on:click="addOne">加N</button>
+      <button v-on:click="subtract">减N</button>
+      <button v-on:click="reset">归零</button>
+    </div>
+  `,
+  created() {
+    model.fetch(1)
+      .then(() => {
+        this.book = model.data
+      })
+  },
+  methods: {
+    addOne() {
+      model.update({ number: this.book.number + (this.n-0) })
+        .then(() => {
+          this.book = model.data
+        })
+    },
+    subtract() {
+      model.update({ number: this.book.number - (this.n-0) })
+        .then(() => {
+          this.book = model.data
+        })
+    },
+    reset() {
+      model.update({ number: 0 })
+        .then(() => {
+          this.book = model.data
+        })
+    }
+
+  }
 })
- 
 
 
-let controller = {
-  init(options) {
-    this.model = options.model
-    this.view = options.view
-    this.view.render(this.model.data)
-    this.bindEvents()
-    this.model.fetch(1)
-      .then(() => {
-        view.render(model.data) //model.data和response.data是一样的
-      })
-  }
 
-  addOne() {
-    var oldNumber = $('#number').text()
-    var newNumber = oldNumber - 0 + 1
-    this.model.update({ number: newNumber })
-      .then(() => {
-        this.view.render(this.model.data)
-      })
-  }
-  subtract() {
-    var oldNumber = $('#number').text()
-    var newNumber = oldNumber - 0 - 1
-    this.model.update({ number: newNumber })
-      .then(() => {
-        this.view.render(this.model.data)
-      })
-  }
-  reset() {
-    this.model.update({ number: 0 })
-      .then(() => {
-        this.view.render(this.model.data)
-      })
-  }
-
-  bindEvents() {
-    $(this.view.el).on('click', '#addOne', this.addOne.bind(this))
-    $(this.view.el).on('click', '#subtract', this.subtract.bind(this))
-    $(this.view.el).on('click', '#reset', this.reset.bind(this))
-  }
-}
-controller.init({ model: model, view: view })
 
 
 
